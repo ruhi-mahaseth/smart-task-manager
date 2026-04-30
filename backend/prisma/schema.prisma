@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  name     String
+  email    String    @unique
+  password String
+  role     String    @default("MEMBER") // ADMIN or MEMBER
+  projects Project[]
+  tasks    Task[]
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+  User        User?    @relation(fields: [userId], references: [id])
+  userId      Int?
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  status      String     @default("TODO") // TODO, IN_PROGRESS, DONE
+  dueDate     DateTime?
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   Int
+  assignee    User?      @relation(fields: [assigneeId], references: [id])
+  assigneeId  Int?
+}
