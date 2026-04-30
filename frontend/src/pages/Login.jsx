@@ -13,8 +13,10 @@ const Login = () => {
     setError('');
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
     try {
-      const res = await axios.post(`http://localhost:5000${endpoint}`, formData);
+      const res = await axios.post(`${API_URL}${endpoint}`, formData);
       if (isLogin) {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data.user));
