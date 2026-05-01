@@ -14,6 +14,7 @@ function App() {
       <main className="page-content">
         <Routes>
           <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/signup" element={token ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/projects" element={token ? <Projects /> : <Navigate to="/login" replace />} />
           <Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to={token ? '/' : '/login'} replace />} />

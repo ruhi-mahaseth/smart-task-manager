@@ -1,16 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname !== '/signup');
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsLogin(location.pathname !== '/signup');
+  }, [location.pathname]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -23,7 +30,7 @@ const Login = () => {
         navigate('/');
       } else {
         setIsLogin(true); // Switch to login after successful register
-        setError('Registration successful! Please login.');
+        setSuccess('Registration successful! Please login.');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong');
@@ -40,6 +47,11 @@ const Login = () => {
         {error && (
           <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', padding: '12px', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>
             {error}
+          </div>
+        )}
+        {success && (
+          <div style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', padding: '12px', borderRadius: '8px', marginBottom: '16px', textAlign: 'center' }}>
+            {success}
           </div>
         )}
 
@@ -84,7 +96,14 @@ const Login = () => {
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-secondary)' }}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <span 
-            onClick={() => setIsLogin(!isLogin)} 
+            onClick={() => {
+              const nextRoute = isLogin ? '/signup' : '/login';
+              setIsLogin(!isLogin);
+              setError('');
+              setSuccess('');
+              setFormData({ name: '', email: '', password: '' });
+              navigate(nextRoute);
+            }} 
             style={{ color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}
           >
             {isLogin ? 'Sign up' : 'Log in'}
