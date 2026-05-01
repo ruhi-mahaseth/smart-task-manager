@@ -1,9 +1,9 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
+function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user')) || {};
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -12,26 +12,37 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="logo">
-        <h2 className="gradient-text">TaskManager</h2>
+    <header className="navbar">
+      <div className="brand">
+        <h1>TaskManager</h1>
+        <p>Track priorities, projects, and progress</p>
       </div>
-      <div className="nav-links">
-        <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Dashboard</Link>
-        <Link to="/projects" className={location.pathname === '/projects' ? 'active' : ''}>Projects</Link>
-      </div>
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        {user && (
-          <span style={{ color: 'var(--text-secondary)' }}>
-            {user.name} <span className={`badge ${user.role}`}>{user.role}</span>
-          </span>
+
+      <nav className="nav-links">
+        {token ? (
+          <>
+            <NavLink to="/" end>
+              Dashboard
+            </NavLink>
+            <NavLink to="/projects">Projects</NavLink>
+          </>
+        ) : null}
+      </nav>
+
+      <div className="nav-actions">
+        {token ? (
+          <>
+            <span className="nav-user">Hi, {user.name || 'Member'}</span>
+            <button className="btn btn-secondary" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavLink to="/login">Login</NavLink>
         )}
-        <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.875rem' }}>
-          Logout
-        </button>
       </div>
-    </nav>
+    </header>
   );
-};
+}
 
 export default Navbar;

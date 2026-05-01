@@ -49,6 +49,7 @@ app.post('/api/auth/register', async (req, res) => {
     
     res.status(201).json({ message: 'User registered successfully', userId: user.id });
   } catch (error) {
+    console.error('Registration failed:', error);
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -92,7 +93,49 @@ app.post('/api/projects', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // --- TASK ROUTES ---
-app.post('/api/tasks', authenticateToken, requireAdmin, async (req, res) => {
+app.post('/api/tasks', authenticateToken, async (req, res) => {
+  const { title, description, dueDate, projectId, assigneeId, priority } = req.body;
+  try {
+    const assignedId = assigneeId !== undefined && assigneeId !== null ? assigneeId : req.user.id;
+    console.log('Task route req.user:', req.user, 'assignedId:', assignedId, 'raw assigneeId:', assigneeId);
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description: description || null,
+        priority: priority || 'Low',
+        dueDate: dueDate ? new Date(dueDate) : null,
+        projectId: projectId ?? null,
+        assigneeId: assignedId,
+      }
+    });
+    console.log('Created task', { id: task.id, assigneeId: task.assigneeId, title: task.title });
+    res.status(201).json(task);
+  } catch (error) {
+    console.error('Task creation error:', error);
+    res.status(500).json({ error: 'Failed to create task' });
+  }
+});
+
+app.get('/api/tasks', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const role = req.user.role;
+    const tasks = await prisma.task.findMany({
+      where: role === 'ADMIN' ? {} : { assigneeId: userId },
+      include: {
+        assignee: { select: { id: true, name: true, email: true } },
+        project: { select: { id: true, name: true } }
+      }
+    });
+    res.json(tasks);
+  } catch (error) {
+    console.error('Failed to fetch tasks:', error);
+    res.status(500).json({ error: 'Failed to fetch tasks' });
+  }
+});
+
+// Legacy compatibility route for simple client code that posts to /tasks
+app.post('/tasks', authenticateToken, async (req, res) => {
   const { title, description, dueDate, projectId, assigneeId } = req.body;
   try {
     const task = await prisma.task.create({
@@ -106,6 +149,7 @@ app.post('/api/tasks', authenticateToken, requireAdmin, async (req, res) => {
     });
     res.status(201).json(task);
   } catch (error) {
+    console.error('Legacy task creation error:', error);
     res.status(500).json({ error: 'Failed to create task' });
   }
 });
@@ -115,13 +159,13 @@ app.put('/api/tasks/:id/status', authenticateToken, async (req, res) => {
   const { status } = req.body; // 'TODO', 'IN_PROGRESS', 'DONE'
   
   try {
-    // Only Admin or Assigned Member should update status (simplification: let any auth user update for now, or add check)
     const task = await prisma.task.update({
       where: { id: parseInt(id) },
       data: { status }
     });
     res.json(task);
   } catch (error) {
+    console.error('Status update error:', error);
     res.status(500).json({ error: 'Failed to update task status' });
   }
 });

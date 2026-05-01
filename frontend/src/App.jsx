@@ -1,43 +1,25 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Projects from './pages/Projects';
-import Navbar from './components/Navbar';
-import './index.css';
-
-// Simple auth check
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
-};
+import { Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
+import Navbar from './components/Navbar.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Login from './pages/Login.jsx';
+import Projects from './pages/Projects.jsx';
 
 function App() {
+  const token = localStorage.getItem('token');
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected Routes */}
-        <Route path="/" element={
-          <PrivateRoute>
-            <>
-              <Navbar />
-              <Dashboard />
-            </>
-          </PrivateRoute>
-        } />
-        
-        <Route path="/projects" element={
-          <PrivateRoute>
-            <>
-              <Navbar />
-              <Projects />
-            </>
-          </PrivateRoute>
-        } />
-        
-      </Routes>
-    </Router>
+    <div className="app-shell">
+      <Navbar />
+      <main className="page-content">
+        <Routes>
+          <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/projects" element={token ? <Projects /> : <Navigate to="/login" replace />} />
+          <Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to={token ? '/' : '/login'} replace />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
